@@ -1,4 +1,5 @@
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error as MSE
 import pandas as pd
 import numpy as np 
 
@@ -30,6 +31,9 @@ def cleanDataframe (dataframe):
     return(df)
 
 def processDataframe (dataframe):
+    """
+    Deletes unwanted columns, deals with Postcode, scales numerical values and sets dummy values on string categorical values.
+    """
     from sklearn.preprocessing import scale
     df=dataframe
     #Droping some unwanted columns
@@ -60,10 +64,13 @@ def simpleLinearReg (dataframe):
     y_test = y_test.reshape(-1,1)
     regressor = LinearRegression()
     regressor.fit(X_train, y_train)
+    pred = regressor.predict(X_test)
+    rmse = np.sqrt(MSE(y_test, pred))
     scoreTrain=regressor.score(X_train, y_train)
     scoreTest=regressor.score(X_test, y_test)
     print("Simple linear regression train score is:",scoreTrain)
-    print("Simple linear regression test score is:",scoreTest)
+    print("Simple linear regression test test is:",scoreTest)
+    print("RMSE: % f" %(rmse))
 
 
 def multiLinearReg (dataframe):
@@ -74,8 +81,11 @@ def multiLinearReg (dataframe):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True, random_state=42)
     regressor = LinearRegression()
     regressor.fit(X_train,y_train)
+    pred = regressor.predict(X_test)
+    rmse = np.sqrt(MSE(y_test, pred))
     print("Multiple linear regression train score is:",regressor.score(X_train, y_train)) 
-    print("Multiple linear regression train score is:",regressor.score(X_test, y_test))
+    print("Multiple linear regression train test is:",regressor.score(X_test, y_test))
+    print("RMSE: % f" %(rmse))
 
 def randomForestRegressor (dataframe):
     from sklearn.ensemble import RandomForestRegressor
@@ -86,8 +96,11 @@ def randomForestRegressor (dataframe):
     regressor = RandomForestRegressor(random_state=3)
     # regressor = RandomForestRegressor()
     regressor.fit(X_train, y_train)
+    pred = regressor.predict(X_test)
+    rmse = np.sqrt(MSE(y_test, pred))
     print("Random Forest Refressor train score is:",regressor.score(X_train, y_train))
-    print("Random Forest Refressor train score is:",regressor.score(X_test, y_test))
+    print("Random Forest Refressor test score is:",regressor.score(X_test, y_test))
+    print("RMSE: % f" %(rmse))
 
 def decisionTreeRegressor (dataframe):
     from sklearn.tree import DecisionTreeRegressor
@@ -97,18 +110,36 @@ def decisionTreeRegressor (dataframe):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True, random_state=42)
     regressor = DecisionTreeRegressor(criterion="squared_error",random_state=0)
     regressor.fit(X_train, y_train)
+    pred = regressor.predict(X_test)
+    rmse = np.sqrt(MSE(y_test, pred))
     print("DecisionTreeRegressor train score is:",regressor.score(X_train, y_train))
-    print("DecisionTreeRegressor train score is:",regressor.score(X_test, y_test))
+    print("DecisionTreeRegressor test score is:",regressor.score(X_test, y_test))
+    print("RMSE: % f" %(rmse))
 
+def xgbRegressor (dataframe):
+    import xgboost as xg
+    df=dataframe
+    X = df.drop(['price'],axis=1).to_numpy()
+    y = df.price.to_numpy().reshape(-1 , 1)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True, random_state=42)
+    regressor = xg.XGBRegressor(objective ='reg:linear',n_estimators = 10, seed = 123)       
+    regressor.fit(X_train, y_train)
+    #RMSE Computation
+    pred = regressor.predict(X_test)
+    rmse = np.sqrt(MSE(y_test, pred))
+    print("XGBRegressor train score is:",regressor.score(X_train, y_train))
+    print("XGBRegressor test score is:",regressor.score(X_test, y_test))
+    print("RMSE: % f" %(rmse))
 
-print("Before cleaning",dataframe.shape)
+print("Dataset size before cleaning",dataframe.shape)
 df=cleanDataframe(dataframe)
-print("After cleaning",df.shape)
+print("Dataset size after cleaning",df.shape)
 df=processDataframe(dataframe)
-print("After processing",df.shape)
+print("Dataset size after processing",df.shape)
 
 saveDataframe(df)
 simpleLinearReg(df)
 multiLinearReg(df)
 randomForestRegressor(df)
 decisionTreeRegressor(df)
+xgbRegressor(df)
