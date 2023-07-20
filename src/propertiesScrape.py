@@ -238,22 +238,22 @@ def save(new_data):
         '''This function saves the information acquired from the previous functions and store them in a csv file in the disk.'''
         data_immo.append(new_data)
         dataframe_immo = pd.DataFrame(data_immo)
-        dataframe_immo.to_csv("./dataset-immo.csv", index=False, encoding="utf-8")
+        dataframe_immo.to_csv(".data/dataset-immo.csv", index=False, encoding="utf-8")
         print(dataframe_immo)
         return dataframe_immo
 
-# start = time.time() # Scraping links for later usage.
-# links = get_links(250) # Set the number according to how many pages you want to search thru each of properties set in get_links function's propertiesToSearch variable.
-# end = time.time()
-# print("Gathering links time: {:.6f}s".format(end-start))
+start = time.time() # Scraping links for later usage.
+links = get_links(250) # Set the number according to how many pages you want to search thru each of properties set in get_links function's propertiesToSearch variable.
+end = time.time()
+print("Gathering links time: {:.6f}s".format(end-start))
 
 # with open('links.txt', 'w') as f:
 #     for item in links:
 #         # write each item on a new line
 #         f.write("%s\n" % item)
 
-with open('links.txt', 'r') as f:
-    links = [line.strip() for line in f]
+# with open('links.txt', 'r') as f:
+#     links = [line.strip() for line in f]
 
 start = time.time() # Using concurrency to spead up the scraping process. 
 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor: 
