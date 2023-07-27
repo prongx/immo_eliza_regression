@@ -3,6 +3,27 @@ from sklearn.metrics import mean_squared_error as MSE
 import pandas as pd
 import numpy as np 
 import pickle5 as pickle
+import bz2file as bz2
+import joblib
+
+# Save
+# encoder_filename = "models/encoder.save"
+# joblib.dump(encoder, encoder_filename)
+# # Load
+# encoder = joblib.load("models/encoder.save")
+
+#bz2
+# data = bz2.BZ2File(file, ‘rb’)
+# data = pickle.load(data)
+# return data
+
+# def decompress_pickle(file):
+# data = bz2.BZ2File(file, ‘rb’)
+# data = pickle.load(data)
+# return data
+
+# model = decompress_pickle(‘filename.pbz2’)
+
 
 dataframe = pd.read_csv('./data/dataset_scrape.csv')
 
@@ -38,15 +59,14 @@ def processDataframe (dataframe):
     df=dataframe
     #Droping some unwanted columns
     # df.drop(['url','locality','type_transaction','state_building','subtype_property'], axis='columns', inplace=True)
-    df.drop(['url','province','district','locality','type_transaction','state_building','subtype_property'], axis='columns', inplace=True)
-
+    df.drop(['url','region','province','district','locality','type_transaction','state_building','subtype_property'], axis='columns', inplace=True)
     #Changing postalCode value to lower range
     df.postalCode=(df.postalCode/1000)
     #Scaling some values
     col = ['n_rooms','living_area', 'area_terrace','area_garden','land_surface','postalCode','n_facades']
     df[col] = scale(df[col])
     #Setting dummy values on string categorical values
-    df = pd.get_dummies(data=df, drop_first=True)
+    df = pd.get_dummies(df,columns = ['type_property'], drop_first=True)
     return(df)
 
 def saveDataframe (dataframe):
@@ -129,9 +149,12 @@ def randomForestRegressor (dataframe):
     pred = regressor.predict(X_test)
     rmse = np.sqrt(MSE(y_test, pred))
     # saving the model
-    pickle_out = open("./models/randomForestRegressor.pickle","wb")
-    pickle.dump(regressor, pickle_out)
-    pickle_out.close()
+    # pickle_out = open("./models/randomForestRegressor.pickle","wb")
+    # pickle.dump(regressor, pickle_out)
+    # pickle_out.close()
+    with bz2.BZ2File("./models/randomForestRegressor" + '.pbz2', 'w') as f:
+        pickle.dump(regressor, f)
+
     print("Random Forest Regressor train score is:",regressor.score(X_train, y_train))
     print("Random Forest Regressor test score is:",regressor.score(X_test, y_test))
     print("RMSE: % f" %(rmse))    
@@ -142,11 +165,11 @@ df=cleanDataframe(dataframe)
 print("Dataset size after cleaning",df.shape)
 df=processDataframe(dataframe)
 print("Dataset size after processing",df.shape)
+print("columns",df.columns)
 
-saveDataframe(df)
-simpleLinearReg(df)
-multiLinearReg(df)
+# saveDataframe(df)
+# simpleLinearReg(df)
+# multiLinearReg(df)
+# decisionTreeRegressor(df)
+# xgbRegressor(df)
 randomForestRegressor(df)
-decisionTreeRegressor(df)
-xgbRegressor(df)
-
