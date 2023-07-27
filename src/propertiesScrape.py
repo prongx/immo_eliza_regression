@@ -85,11 +85,11 @@ def get_data(url):
             property_dict["street"] = 0           
             
         try:
-            property_dict["Type_property"] = Raw_data_InDict["property"]["type"]
+            property_dict["type_property"] = Raw_data_InDict["property"]["type"]
         except KeyError:
-            property_dict["Type_property"] = 0
+            property_dict["type_property"] = 0
         except TypeError:
-            property_dict["Type_property"] = 0
+            property_dict["type_property"] = 0
         try:
             property_dict["subtype_property"] = Raw_data_InDict["property"]["subtype"]
         except KeyError:

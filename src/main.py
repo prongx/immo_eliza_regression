@@ -2,7 +2,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error as MSE
 import pandas as pd
 import numpy as np 
-
+import pickle5 as pickle
 
 dataframe = pd.read_csv('./data/dataset_scrape.csv')
 
@@ -17,7 +17,7 @@ def cleanDataframe (dataframe):
     df.dropna(subset=['region'], how='any',inplace=True)
     df.dropna(subset=['living_area'], how='any',inplace=True)
     df.dropna(subset=['state_building'], how='any',inplace=True)
-    df.drop(df[(df.Type_property == "APARTMENT") & (df.floor.isnull())].index, inplace=True)
+    df.drop(df[(df.type_property == "APARTMENT") & (df.floor.isnull())].index, inplace=True)
     df.dropna(subset=['area_garden'], how='any',inplace=True)
     #Filling empty values
     x = (df[(df.terrace==1) & (df.area_terrace.notnull())].area_terrace.median())
@@ -37,11 +37,13 @@ def processDataframe (dataframe):
     from sklearn.preprocessing import scale
     df=dataframe
     #Droping some unwanted columns
-    df.drop(['url','locality','type_transaction','state_building','subtype_property'], axis='columns', inplace=True)
+    # df.drop(['url','locality','type_transaction','state_building','subtype_property'], axis='columns', inplace=True)
+    df.drop(['url','province','district','locality','type_transaction','state_building','subtype_property'], axis='columns', inplace=True)
+
     #Changing postalCode value to lower range
     df.postalCode=(df.postalCode/1000)
     #Scaling some values
-    col = ['n_rooms','living_area', 'area_terrace','area_garden', 'land_surface','postalCode','n_facades']
+    col = ['n_rooms','living_area', 'area_terrace','area_garden','land_surface','postalCode','n_facades']
     df[col] = scale(df[col])
     #Setting dummy values on string categorical values
     df = pd.get_dummies(data=df, drop_first=True)
@@ -49,8 +51,8 @@ def processDataframe (dataframe):
 
 def saveDataframe (dataframe):
     dataframe.to_csv("./data/dataset_ALL.csv", index=False, encoding="utf-8")
-    dataframe.to_csv("./data/dataset_APARTMENT.csv", index=False, encoding="utf-8")
-    dataframe.to_csv("./data/dataset_HOUSE.csv", index=False, encoding="utf-8")
+    # dataframe.to_csv("./data/dataset_APARTMENT.csv", index=False, encoding="utf-8")
+    # dataframe.to_csv("./data/dataset_HOUSE.csv", index=False, encoding="utf-8")
 
 def simpleLinearReg (dataframe):
     from sklearn.linear_model import LinearRegression
@@ -72,7 +74,6 @@ def simpleLinearReg (dataframe):
     print("Simple linear regression test test is:",scoreTest)
     print("RMSE: % f" %(rmse))
 
-
 def multiLinearReg (dataframe):
     from sklearn.linear_model import LinearRegression
     df=dataframe
@@ -85,21 +86,6 @@ def multiLinearReg (dataframe):
     rmse = np.sqrt(MSE(y_test, pred))
     print("Multiple linear regression train score is:",regressor.score(X_train, y_train)) 
     print("Multiple linear regression train test is:",regressor.score(X_test, y_test))
-    print("RMSE: % f" %(rmse))
-
-def randomForestRegressor (dataframe):
-    from sklearn.ensemble import RandomForestRegressor
-    df=dataframe
-    X = df.drop(['price'],axis=1).to_numpy()
-    y = df.price.to_numpy().reshape(-1 , 1)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True, random_state=42)
-    regressor = RandomForestRegressor(random_state=3)
-    # regressor = RandomForestRegressor()
-    regressor.fit(X_train, y_train)
-    pred = regressor.predict(X_test)
-    rmse = np.sqrt(MSE(y_test, pred))
-    print("Random Forest Refressor train score is:",regressor.score(X_train, y_train))
-    print("Random Forest Refressor test score is:",regressor.score(X_test, y_test))
     print("RMSE: % f" %(rmse))
 
 def decisionTreeRegressor (dataframe):
@@ -131,6 +117,26 @@ def xgbRegressor (dataframe):
     print("XGBRegressor test score is:",regressor.score(X_test, y_test))
     print("RMSE: % f" %(rmse))
 
+def randomForestRegressor (dataframe):
+    from sklearn.ensemble import RandomForestRegressor
+    df=dataframe
+    X = df.drop(['price'],axis=1).to_numpy()
+    y = df.price.to_numpy().reshape(-1 , 1)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True, random_state=42)
+    regressor = RandomForestRegressor(random_state=3)
+    # regressor = RandomForestRegressor()
+    regressor.fit(X_train, y_train)
+    pred = regressor.predict(X_test)
+    rmse = np.sqrt(MSE(y_test, pred))
+    # saving the model
+    pickle_out = open("./models/randomForestRegressor.pickle","wb")
+    pickle.dump(regressor, pickle_out)
+    pickle_out.close()
+    print("Random Forest Regressor train score is:",regressor.score(X_train, y_train))
+    print("Random Forest Regressor test score is:",regressor.score(X_test, y_test))
+    print("RMSE: % f" %(rmse))    
+
+
 print("Dataset size before cleaning",dataframe.shape)
 df=cleanDataframe(dataframe)
 print("Dataset size after cleaning",df.shape)
@@ -143,3 +149,4 @@ multiLinearReg(df)
 randomForestRegressor(df)
 decisionTreeRegressor(df)
 xgbRegressor(df)
+
