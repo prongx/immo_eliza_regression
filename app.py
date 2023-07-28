@@ -6,14 +6,16 @@
 """
 
 from fastapi import FastAPI, HTTPException
-from fastapi.encoders import jsonable_encoder
+# from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field
 from typing import Optional, Union
-import pandas as pd
-import numpy as np 
-from sklearn.preprocessing import scale
-import pickle5 as pickle
-import bz2file as bz2
+# import pandas as pd
+# import numpy as np 
+# from sklearn.preprocessing import scale
+# import pickle5 as pickle
+# import bz2file as bz2
+import src.prediction 
+import src.preprocessing
 
 app = FastAPI() 
 
@@ -36,7 +38,6 @@ class dataInput(BaseModel):
     land_surface: Union[float, str] = None
     n_facades: Union[float, str] = None
     swimming_pool: Union[float, str] = None
-
 
     # columns Index(['postalCode', 'price', 'n_rooms', 'living_area', 'equipped_kitchen',
     #    'furnished', 'fireplace', 'terrace', 'area_terrace', 'garden',
@@ -74,25 +75,7 @@ async def inputdata(input: dataInput):
     if missingFields:
         raise HTTPException(status_code=400, detail= f"You forgot to input these fields: {', '.join(missingFields)}.") 
     else:
-        df = pd.DataFrame([input.model_dump()])
-        #Changing postalCode value to lower range
-        df.postalCode=(df.postalCode/1000)
-        #Transforming type_property column into type_property_HOUSE dummy(0 1)
-        if "HOUSE" in df["type_property"].values:
-            type_property_HOUSE = [1]
-        else:
-            type_property_HOUSE = [0]
-        df["type_property_HOUSE"] = type_property_HOUSE
-        #Deleting type_property value
-        del df["type_property"]
-       
-        #Scaling some values
-        col = ['n_rooms','living_area', 'area_terrace','area_garden','land_surface','postalCode','n_facades']
-        df[col] = scale(df[col])
-      
-        pickle_in = bz2.BZ2File("./models/randomForestRegressor.pbz2",'rb')
-        regressor = pickle.load(pickle_in)
-        pred = regressor.predict(df)
-
-           
-        return {f"result: {pred}"}
+       df = src.preprocessing.preprocess_new_data(input)
+       pred = src.prediction.predict_new_data(df)
+    return {f"result: {pred[0]}"}
+ 

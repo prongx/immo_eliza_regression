@@ -154,7 +154,6 @@ def randomForestRegressor (dataframe):
     # pickle_out.close()
     with bz2.BZ2File("./models/randomForestRegressor" + '.pbz2', 'w') as f:
         pickle.dump(regressor, f)
-
     print("Random Forest Regressor train score is:",regressor.score(X_train, y_train))
     print("Random Forest Regressor test score is:",regressor.score(X_test, y_test))
     print("RMSE: % f" %(rmse))    
